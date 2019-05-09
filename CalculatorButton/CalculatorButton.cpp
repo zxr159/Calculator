@@ -5,6 +5,9 @@
 #include <iostream>
 #include<vector>
 #include <stdlib.h>
+
+#include "Calculator.h"
+
 using namespace std;
 struct {
 	int     iStyle;
@@ -53,8 +56,8 @@ public :
 	string  SymbolType;
 	bool isSymbol(bool isSymbol);
 	void isNumber(bool isNumber, float Number, calculator & calculator);
-	void isSymbol(bool isSymbol, string symbol, calculator & calculator);
-	float getNumber(calculator &calculator, bool isSymbol);
+	void  atSymbol(bool isSymbol, string symbol, calculator & calculator);
+	calculator getNumber(calculator &calculator, bool isSymbol);
 	void  TempBufferclear(calculator& calculator);
 	float add(float NumberOne, float NumberTwo);
 	float subtraction(float NumberOne, float NumberTwo);
@@ -65,6 +68,32 @@ public :
 	void  paint(calculator &calculator, HDC hdc, int cxChar, int cyChar);
 	void  paint(calculator &calculator, float ResultNum, HDC hdc, int cxChar, int cyChar);
 	void clear();
+
+	wstring ANSIToUnicode(const string& str)
+	{
+		int  len = 0;
+		len = str.length();
+		int  unicodeLen = ::MultiByteToWideChar(CP_ACP,
+			0,
+			str.c_str(),
+			-1,
+			NULL,
+			0);
+		wchar_t *  pUnicode;
+		pUnicode = new  wchar_t[unicodeLen + 1];
+		memset(pUnicode, 0, (unicodeLen + 1) * sizeof(wchar_t));
+		::MultiByteToWideChar(CP_ACP,
+			0,
+			str.c_str(),
+			-1,
+			(LPWSTR)pUnicode,
+			unicodeLen);
+		wstring  rt;
+		rt = (wchar_t*)pUnicode;
+		delete  pUnicode;
+
+		return  rt;
+	}
 };
 bool calculator::isSymbol(bool isSymbol)
 {
@@ -75,37 +104,29 @@ bool calculator::isSymbol(bool isSymbol)
 }
 void  calculator::isNumber(bool isNumber, float Number, calculator & calculator)
 {
-
 	if (isNumber == true)
 	{
-		calculator.data.push_back(Number);
+		calculator.data.push_back(Number);	
 		
 	}
-
-	
 }
-void  calculator::isSymbol(bool isSymbol, string symbol, calculator& calculator)
+void  calculator::atSymbol(bool isSymbol, string symbol, calculator& calculator)
 {
 
-	
 	if (isSymbol == true)
 	{
 		calculator.TempBuffer.append(calculator.symbol);
-		//if (symbol == ".")
-		//{
-			
-		//}
 	}
 	
-	
 }
-float calculator::getNumber(calculator &calculator,bool Symbol)
+
+calculator calculator::getNumber(calculator &calculator,bool Symbol)
 {
-	char *temp = new char[256];
+	char *temp = new char[500];
 	for (int i = 0; i < calculator.data.size(); i++)
 	{
 		
-		sprintf_s(temp, sizeof(temp),"%lf", calculator.data[i]);
+		sprintf_s(temp, 500,"%lf", calculator.data[i]);
 		calculator.TempBuffer.append(temp);
 		calculator.Number = atof(temp);
 		if (calculator.isSymbol(Symbol) == true)
@@ -116,7 +137,7 @@ float calculator::getNumber(calculator &calculator,bool Symbol)
 		
 	}
 	delete temp;
-	return calculator.Number;
+	return calculator;
 }
 
 float calculator::add(float NumberOne,float NumberTwo)
@@ -146,17 +167,19 @@ void  calculator::paint(HDC hdc ,int cxChar,int cyChar)
 
 }
 void calculator::paint(calculator &calculator, HDC hdc, int cxChar, int cyChar)
-{
-	
-	WCHAR tempbuffer[256];
-	wsprintf(tempbuffer, L"%s", calculator.TempBuffer);
-	cout << "字符串是：" << tempbuffer;
-	TextOut(hdc, 5 * cxChar, 4 * cyChar, tempbuffer, lstrlen(tempbuffer));
+{//显示123数字或者是数字和字符串
+	wstring a = ANSIToUnicode(calculator.TempBuffer);
+	wstring* pa = &a;
+	const wchar_t* add = a.c_str();
+
+	//wsprintf(tempbuffer, L"%s", calculator.TempBuffer.c_str());
+	//cout << "字符串是：" << tempbuffer;
+	TextOut(hdc, 5 * cxChar, 4 * cyChar, a.c_str(), a.size());
 	SetTextAlign(hdc, TA_LEFT | TA_TOP);
 	
 }
 void  calculator::paint(float ResultNum, HDC hdc, int cxChar, int cyChar)
-{
+{//显示结果
 	
 	WCHAR tempbuffer[256];
 	wsprintf(tempbuffer, L"%d", ResultNum);
@@ -167,8 +190,8 @@ void  calculator::paint(float ResultNum, HDC hdc, int cxChar, int cyChar)
 //把一整行的公式显示在上一行。
 void  calculator::paint(calculator &calculator, float ResultNum, HDC hdc, int cxChar, int cyChar)
 {
-	char *temp = new char[256];
-	sprintf_s(temp, sizeof(temp), "%lf", ResultNum);
+	char *temp = new char[500];
+	sprintf_s(temp, 500, "%lf", ResultNum);
 	calculator.TempBuffer.append(temp);
 	WCHAR tempbuffer[256];
 	wsprintf(tempbuffer, L"%d", calculator.TempBuffer);
@@ -186,8 +209,23 @@ void calculator::clear()//输出框清空
 	
 }
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+
+void test()
+{
+	//benson::Calulator c;
+
+	//c.AddNumber(1);
+	//c.AddOperator(benson::Operator::multipli);
+	//c.AddNumber(3);
+	//c.AddOperator(benson::Operator::add);
+	//c.AddNumber(456);
+	//wstring str = c.GetExpressionString();
+	//double value = c.GetResult();
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
 {
+	test();
 	static TCHAR  szAppName[] = TEXT("计算器");
 	HWND             hwnd;
 	MSG              msg;
@@ -286,29 +324,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case 1:
 			
 			calculator.isNumber(true, 7, calculator);
+			//DrawText()
+			//TextOut(hdc, 10 * cxChar, 2 * cyChar, calculator.TempBuffer, lstrlen(calculator.TempBuffer));
+			calculator = calculator.getNumber(calculator, false);
 			
+			calculator.paint(calculator, hdc, cxChar, cyChar);
+
 			//ReleaseDC(hwnd, hdc);
 			break;
 			
 		case 2:
 			calculator.isNumber(true, 4, calculator);
-			
+			calculator = calculator.getNumber(calculator, false);
+			calculator.paint(calculator, hdc, cxChar, cyChar);
 			break;
 		case 3:
 			calculator.isNumber(true, 1, calculator);
-			
+			calculator = calculator.getNumber(calculator, false);
+			calculator.paint(calculator, hdc, cxChar, cyChar);
 			break;
 		case 4:
 			if (flag % 2 == 0)//所有值取正数
 			{
-				calculator.isSymbol(true, "+", calculator);
-				calculator.Number = calculator.getNumber(calculator,true);
+				calculator.atSymbol(true, "+", calculator);
+				calculator = calculator.getNumber(calculator,true);
 				
 			}
 			else//所有值取负数
 			{
-				calculator.isSymbol(true, "-", calculator);
-				calculator.Number = calculator.getNumber(calculator,true);
+				calculator.atSymbol(true, "-", calculator);
+				calculator = calculator.getNumber(calculator,true);
 				calculator.Number = -calculator.Number;
 
 			}	
@@ -321,75 +366,86 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case 6:
 
 			calculator.isNumber(true, 8, calculator);
-			
+			calculator = calculator.getNumber(calculator, false);
+			calculator.paint(calculator, hdc, cxChar, cyChar);
 			break;
 
 		case 7:
 			calculator.isNumber(true, 5, calculator);
-			
+			calculator = calculator.getNumber(calculator, false);
+			calculator.paint(calculator, hdc, cxChar, cyChar);
 			break;
 		case 8:
 			calculator.isNumber(true, 2, calculator);
-			
+			calculator = calculator.getNumber(calculator, false);
+			calculator.paint(calculator, hdc, cxChar, cyChar);
 			
 			break;
 		case 9:
 			calculator.isNumber(true, 0, calculator);
-			
+			calculator = calculator.getNumber(calculator, false);
+			calculator.paint(calculator, hdc, cxChar, cyChar);
 			break;
 
 		case 10:
-			calculator.isSymbol(true, "%", calculator);
+			calculator.atSymbol(true, "%", calculator);
 			
 			break;
 		case 11:
 			calculator.isNumber(true, 9, calculator);
-			
+			calculator = calculator.getNumber(calculator, false);
+			calculator.paint(calculator, hdc, cxChar, cyChar);
 
 			break;
 		case 12:
 			calculator.isNumber(true, 6, calculator);
-			
+			calculator = calculator.getNumber(calculator, false);
+			calculator.paint(calculator, hdc, cxChar, cyChar);
 			break;
 
 		case 13:
 			calculator.isNumber(true, 3, calculator);
-			
+			calculator = calculator.getNumber(calculator, false);
+			calculator.paint(calculator, hdc, cxChar, cyChar);
 			break;
 		case 14:
-			calculator.isSymbol(true, ".", calculator);
+			calculator.atSymbol(true, ".", calculator);
 			break;
 		case 15:
 			
-			calculator.isSymbol(true, "/", calculator);
-			NumOne = calculator.getNumber(calculator, true);
+			calculator.atSymbol(true, "/", calculator);
+			calculator = calculator.getNumber(calculator, true);
+			NumOne = calculator.Number;
 			calculator.SymbolType = "/";
 			Operator = division;
 			
 			break;
 		case 16:
-			calculator.isSymbol(true, "*", calculator);
-			NumTwo = calculator.getNumber(calculator, true);
+			calculator.atSymbol(true, "*", calculator);
+			calculator = calculator.getNumber(calculator, true);
+			NumTwo = calculator.Number;
 			calculator.SymbolType = "*";
 			Operator = multipli;
 			break;
 		case 17:
-			calculator.isSymbol(true, "-", calculator);
-			NumThree = calculator.getNumber(calculator, true);
+			calculator.atSymbol(true, "-", calculator);
+			calculator = calculator.getNumber(calculator, true);
+			NumThree = calculator.Number;
 			calculator.SymbolType = "-";
 			Operator = subtraction;
 			
 			break;
 		case 18:
-			calculator.isSymbol(true, "+", calculator);
-			NumFour = calculator.getNumber(calculator, true);
+			calculator.atSymbol(true, "+", calculator);
+			calculator = calculator.getNumber(calculator, true);
+			NumFour = calculator.Number;
 			calculator.SymbolType = "+";
 			Operator = add;
 			
 
 			break;
 		case 19:
-			calculator.isSymbol(true, "=", calculator);
+			calculator.atSymbol(true, "=", calculator);
 			calculator.paint(ResultNum, hdc, cxChar, cyChar);
 			calculator.paint(calculator, ResultNum, hdc, cxChar, cyChar);
 			//calculator.TempBufferclear(calculator);
