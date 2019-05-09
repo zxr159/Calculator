@@ -1,8 +1,11 @@
-// CalculatorButton.cpp : Defines the entry point for the application.
-//
-
+// CalculatorButton.cpp : Defines the entry point for the>
 #include "stdafx.h"
 #include <windows.h> 
+#include <string>
+#include <iostream>
+#include<vector>
+#include <stdlib.h>
+using namespace std;
 struct {
 	int     iStyle;
 	TCHAR *   szText;
@@ -13,7 +16,7 @@ button[] =
 	BS_PUSHBUTTON,		  TEXT("7"),
 	BS_PUSHBUTTON,        TEXT("4"),
 	BS_PUSHBUTTON,		  TEXT("1"),
-	BS_PUSHBUTTON,        TEXT("（）"),
+	BS_PUSHBUTTON,        TEXT("+/_"),
 	BS_PUSHBUTTON,        TEXT("<-"),
 	BS_PUSHBUTTON,        TEXT("8"),
 	BS_PUSHBUTTON,        TEXT("5"),
@@ -33,12 +36,155 @@ button[] =
 
 #define NUM (sizeof button / sizeof button[0]) 
 
+enum Clear {
+		clearOne,clearAll
+	} Clear;
 enum Operator {
-	add, subtraction, multipli, division
-} Operator;
+		add, subtraction, multipli, division
+	} Operator;
+	
+class calculator {
+public :
+	vector<float> data;
+    string TempBuffer ;
+	float Number;
+	string  symbol;
+	//bool isNumbr;
+	string  SymbolType;
+	bool isSymbol(bool isSymbol);
+	void isNumber(bool isNumber, float Number, calculator & calculator);
+	void isSymbol(bool isSymbol, string symbol, calculator & calculator);
+	float getNumber(calculator &calculator, bool isSymbol);
+	void  TempBufferclear(calculator& calculator);
+	float add(float NumberOne, float NumberTwo);
+	float subtraction(float NumberOne, float NumberTwo);
+	float multipli(float NumberOne, float NumberTwo);
+	float division(float NumberOne, float NumberTwo);
+	void  paint( HDC hdc, int cxChar, int cyChar);
+	void  paint(float ResultNum, HDC hdc, int cxChar, int cyChar);
+	void  paint(calculator &calculator, HDC hdc, int cxChar, int cyChar);
+	void  paint(calculator &calculator, float ResultNum, HDC hdc, int cxChar, int cyChar);
+	void clear();
+};
+bool calculator::isSymbol(bool isSymbol)
+{
+	if (isSymbol == true)
+		return true;
+	else
+		return false;
+}
+void  calculator::isNumber(bool isNumber, float Number, calculator & calculator)
+{
 
+	if (isNumber == true)
+	{
+		calculator.data.push_back(Number);
+		
+	}
 
+	
+}
+void  calculator::isSymbol(bool isSymbol, string symbol, calculator& calculator)
+{
 
+	
+	if (isSymbol == true)
+	{
+		calculator.TempBuffer.append(calculator.symbol);
+		//if (symbol == ".")
+		//{
+			
+		//}
+	}
+	
+	
+}
+float calculator::getNumber(calculator &calculator,bool Symbol)
+{
+	char *temp = new char[256];
+	for (int i = 0; i < calculator.data.size(); i++)
+	{
+		
+		sprintf_s(temp, sizeof(temp),"%lf", calculator.data[i]);
+		calculator.TempBuffer.append(temp);
+		calculator.Number = atof(temp);
+		if (calculator.isSymbol(Symbol) == true)
+		{
+			calculator.data.clear();
+
+		}
+		
+	}
+	delete temp;
+	return calculator.Number;
+}
+
+float calculator::add(float NumberOne,float NumberTwo)
+{
+	float ResultNum = NumberOne + NumberTwo;
+	return ResultNum;
+}
+float calculator::subtraction(float NumberOne, float NumberTwo)
+{
+	float ResultNum = NumberOne - NumberTwo;
+	return ResultNum;
+}
+float calculator::multipli(float NumberOne, float NumberTwo)
+{
+	float ResultNum = NumberOne * NumberTwo;
+	return ResultNum;
+
+}
+float calculator::division(float NumberOne, float NumberTwo)
+{
+	float ResultNum = NumberOne / NumberTwo;
+	return ResultNum;
+}
+void  calculator::paint(HDC hdc ,int cxChar,int cyChar)
+{	
+	TextOut(hdc, 5 * cxChar, 4 * cyChar, TEXT("0"), lstrlen(TEXT("0")));
+
+}
+void calculator::paint(calculator &calculator, HDC hdc, int cxChar, int cyChar)
+{
+	
+	WCHAR tempbuffer[256];
+	wsprintf(tempbuffer, L"%s", calculator.TempBuffer);
+	cout << "字符串是：" << tempbuffer;
+	TextOut(hdc, 5 * cxChar, 4 * cyChar, tempbuffer, lstrlen(tempbuffer));
+	SetTextAlign(hdc, TA_LEFT | TA_TOP);
+	
+}
+void  calculator::paint(float ResultNum, HDC hdc, int cxChar, int cyChar)
+{
+	
+	WCHAR tempbuffer[256];
+	wsprintf(tempbuffer, L"%d", ResultNum);
+	cout << "字符串是：" << tempbuffer;
+	TextOut(hdc, 5 * cxChar, 4 * cyChar, tempbuffer, lstrlen(tempbuffer));
+	SetTextAlign(hdc, TA_LEFT | TA_TOP);
+}
+//把一整行的公式显示在上一行。
+void  calculator::paint(calculator &calculator, float ResultNum, HDC hdc, int cxChar, int cyChar)
+{
+	char *temp = new char[256];
+	sprintf_s(temp, sizeof(temp), "%lf", ResultNum);
+	calculator.TempBuffer.append(temp);
+	WCHAR tempbuffer[256];
+	wsprintf(tempbuffer, L"%d", calculator.TempBuffer);
+	cout << "字符串是：" << tempbuffer;
+	TextOut(hdc, 5 * cxChar, 2 * cyChar, tempbuffer, lstrlen(tempbuffer));
+	SetTextAlign(hdc, TA_LEFT | TA_TOP);
+	delete temp;
+}
+void calculator::TempBufferclear(calculator& calculator)
+{
+	calculator.TempBuffer.clear();//存储字串清空
+}
+void calculator::clear()//输出框清空
+{
+	
+}
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
 {
@@ -80,8 +226,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	static int    cxChar, cyChar;
 	HDC            hdc = GetDC(hwnd);
 	PAINTSTRUCT   ps;
-	int           j, i, clicked ;
+	calculator calculator;
+	int           j, i,flag = 0 ;
 	
+	float ResultNum=0.0,NumOne,NumTwo,NumThree,NumFour;
 	LPRECT rec = (RECT*)malloc(sizeof(RECT));
 	GetClientRect(hwnd, rec);
 	switch (message)
@@ -110,16 +258,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		rect.bottom = HIWORD(lParam);
 		return 0;
 
-
-
-
 	case  WM_PAINT:
-		InvalidateRect(hwnd, &rect, FALSE);
+		InvalidateRect(hwnd, &rect, TRUE);
 		hdc = BeginPaint(hwnd, &ps);
 		SelectObject(hdc, GetStockObject(SYSTEM_FIXED_FONT));
-		SetBkMode(hdc, TRANSPARENT);
-		static TCHAR buffer[100];
+		//SetBkMode(hdc, TRANSPARENT);
 		
+		
+		static TCHAR buffer[100];
+		calculator.paint(hdc, cxChar, cyChar);
 		EndPaint(hwnd, &ps);
 		return 0;
 	                
@@ -131,211 +278,253 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		rect.top = 50;
 		rect.right = 350;
 		rect.bottom = 70;
-		wchar_t TempBuff[256],Text[256];
-		int TempNum=0, ResultNum=0, flag=0;
-		
-		//wsprintf(text, L"LOWORD(wParam)：%d  HIWORD(wParam)：%d", LOWORD(wParam), HIWORD(wParam));
-		//DrawText(hdc, text, wcslen(text), &rect, DT_VCENTER | DT_CENTER | DT_SINGLELINE | DT_END_ELLIPSIS |DT_BOTTOM);
-		
 		switch (LOWORD(wParam))
 		{
-			
+		
 		case 0:
-			
-			break;
-			//DrawText(hdc, text, wcslen(text), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
+			Clear = clearAll;
 		case 1:
-			lstrcat(Text, _T("7"));
 			
-			wsprintf(TempBuff, L"7");
+			calculator.isNumber(true, 7, calculator);
 			
-			TextOut(hdc, rect.left+(clicked*cxChar), 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP );
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			
-			clicked++;
+			//ReleaseDC(hwnd, hdc);
 			break;
 			
 		case 2:
-			lstrcat(Text, _T("4"));
-			wsprintf(TempBuff, L"4");
+			calculator.isNumber(true, 4, calculator);
 			
-			TextOut(hdc, rect.left + (clicked*cxChar)+10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			clicked++;
 			break;
 		case 3:
-			lstrcat(Text, _T("1"));
-			wsprintf(TempBuff, L"1");
-
-			TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			clicked++;
+			calculator.isNumber(true, 1, calculator);
+			
 			break;
 		case 4:
-			if (flag % 2 == 0)
+			if (flag % 2 == 0)//所有值取正数
 			{
-				lstrcat(Text, TEXT(")"));
-				wsprintf(TempBuff, L")");
-
-				TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-				SetTextAlign(hdc, TA_LEFT | TA_TOP);
-				//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-				ReleaseDC(hwnd, hdc);
-				clicked++;
-			}
-			else
-			{
+				calculator.isSymbol(true, "+", calculator);
+				calculator.Number = calculator.getNumber(calculator,true);
 				
-				lstrcat(Text, TEXT("("));
-				wsprintf(TempBuff, L"(");
-
-				TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-				SetTextAlign(hdc, TA_LEFT | TA_TOP);
-				//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-				ReleaseDC(hwnd, hdc);
-				clicked++;
+			}
+			else//所有值取负数
+			{
+				calculator.isSymbol(true, "-", calculator);
+				calculator.Number = calculator.getNumber(calculator,true);
+				calculator.Number = -calculator.Number;
 
 			}	
 			flag  += 1;
+			if (flag > 2)
+				flag = 0;
 			break;
-		//case 5:
-			//删除一个数
+		case 5:
+			Clear = clearOne;
 		case 6:
 
-			lstrcat(Text, TEXT("8"));
-			wsprintf(TempBuff, L"8");
-
-			TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			clicked++;
-
+			calculator.isNumber(true, 8, calculator);
+			
 			break;
 
 		case 7:
-			lstrcat(Text, TEXT("5"));
-			wsprintf(TempBuff, L"5");
-
-			TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			clicked++;
+			calculator.isNumber(true, 5, calculator);
+			
 			break;
 		case 8:
-			lstrcat(Text, TEXT("2"));
-			wsprintf(TempBuff, L"2");
-
-			TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			clicked++;
+			calculator.isNumber(true, 2, calculator);
+			
 			
 			break;
 		case 9:
-			lstrcat(Text, _T("0"));
-			wsprintf(TempBuff, L"0");
-
-			TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			clicked++;
+			calculator.isNumber(true, 0, calculator);
+			
 			break;
 
 		case 10:
+			calculator.isSymbol(true, "%", calculator);
 			
-			wsprintf(TempBuff, L"%");
-			TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			TempNum = _ttoi(Text);
-			ResultNum *= TempNum;
-			ResultNum /= 100;
-			memset(Text, 0, wcslen(Text));
-			clicked++;
 			break;
 		case 11:
-			lstrcat(Text, _T("9"));
-			wsprintf(TempBuff, L"9");
-
-			TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
+			calculator.isNumber(true, 9, calculator);
 			
-			ReleaseDC(hwnd, hdc);
-			clicked++;
 
 			break;
 		case 12:
-			lstrcat(Text, _T("6"));
-			wsprintf(TempBuff, L"6");
-
-			TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			clicked++;
+			calculator.isNumber(true, 6, calculator);
+			
 			break;
 
 		case 13:
-			lstrcat(Text, _T("3"));
-			wsprintf(TempBuff, L"3");
-
-			TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			clicked++;
+			calculator.isNumber(true, 3, calculator);
+			
 			break;
 		case 14:
-			lstrcat(TempBuff, TEXT("."));
+			calculator.isSymbol(true, ".", calculator);
 			break;
 		case 15:
 			
-			wsprintf(TempBuff, L"/");
-			TextOut(hdc, rect.left + (clicked*cxChar) + 10, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_LEFT | TA_TOP);
-			//DrawText(hdc, TempBuff, wcslen(TempBuff), &rect, DT_RIGHT | DT_SINGLELINE | DT_END_ELLIPSIS | DT_BOTTOM);
-			ReleaseDC(hwnd, hdc);
-			TempNum = _ttoi(Text);
-			ResultNum /= TempNum;
-			memset(Text, 0, wcslen(Text));
-			clicked++;
+			calculator.isSymbol(true, "/", calculator);
+			NumOne = calculator.getNumber(calculator, true);
+			calculator.SymbolType = "/";
+			Operator = division;
 			
-			
-			clicked++;
 			break;
 		case 16:
-			lstrcat(TempBuff, TEXT("x"));
+			calculator.isSymbol(true, "*", calculator);
+			NumTwo = calculator.getNumber(calculator, true);
+			calculator.SymbolType = "*";
+			Operator = multipli;
 			break;
 		case 17:
-			lstrcat(TempBuff, TEXT("-"));
-			ResultNum -= TempNum;
-			clicked++;
+			calculator.isSymbol(true, "-", calculator);
+			NumThree = calculator.getNumber(calculator, true);
+			calculator.SymbolType = "-";
+			Operator = subtraction;
+			
 			break;
 		case 18:
-			lstrcat(TempBuff, TEXT("+"));
-			ResultNum += TempNum;
-			clicked++;
+			calculator.isSymbol(true, "+", calculator);
+			NumFour = calculator.getNumber(calculator, true);
+			calculator.SymbolType = "+";
+			Operator = add;
+			
 
 			break;
 		case 19:
-			//wsprintf(Text, _T("="));
+			calculator.isSymbol(true, "=", calculator);
+			calculator.paint(ResultNum, hdc, cxChar, cyChar);
+			calculator.paint(calculator, ResultNum, hdc, cxChar, cyChar);
+			//calculator.TempBufferclear(calculator);
+			break;
+		}
+		switch (Clear)
+		{
+		case clearOne:
 			
-			wsprintf(TempBuff, L" %d", ResultNum);
-			TextOut(hdc, 5 * cxChar, 4 * cyChar, TempBuff, lstrlen(TempBuff));
-			SetTextAlign(hdc, TA_RIGHT | TA_TOP);
-			ReleaseDC(hwnd, hdc);
-			ValidateRect(hwnd, &rect);
+			break;
+		case clearAll:
+
+			break;
+		default:
+			break;
+		}
+		switch (Operator)
+		{
+		case add:
+			if (calculator.SymbolType == "-")
+			{
+				ResultNum = calculator.add(NumFour, NumThree);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+			}
+			if (calculator.SymbolType == "+")
+			{
+				ResultNum = calculator.add(NumFour, NumFour);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+
+			}
+			if (calculator.SymbolType == "*")
+			{
+				ResultNum = calculator.add(NumFour, NumTwo);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+
+			}
+			if (calculator.SymbolType == "/")
+			{
+				ResultNum = calculator.add(NumFour, NumOne);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+
+			}
+
+			break;
+		case subtraction:
+			if (calculator.SymbolType == "-")
+			{
+				ResultNum = calculator.subtraction(NumThree, NumThree);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+			}
+			if (calculator.SymbolType == "+")
+			{
+				ResultNum = calculator.subtraction(NumThree, NumFour);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+
+			}
+			if (calculator.SymbolType == "*")
+			{
+				ResultNum = calculator.subtraction(NumThree, NumTwo);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+
+			}
+			if (calculator.SymbolType == "/")
+			{
+				ResultNum = calculator.subtraction(NumThree, NumOne);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+
+			}
+
+			break;
+		case multipli:
+			if (calculator.SymbolType == "-")
+			{
+				ResultNum = calculator.multipli(NumTwo, NumThree);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+			}
+			if (calculator.SymbolType == "+")
+			{
+				ResultNum = calculator.multipli(NumTwo, NumFour);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+
+			}
+			if (calculator.SymbolType == "*")
+			{
+				ResultNum = calculator.multipli(NumTwo, NumTwo);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+
+			}
+			if (calculator.SymbolType == "/")
+			{
+				ResultNum = calculator.multipli(NumTwo, NumOne);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+			}
+			break;
+		case division:
+			if (calculator.SymbolType == "-")
+			{
+				ResultNum = calculator.division(NumOne, NumThree);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+			}
+			if (calculator.SymbolType == "+")
+			{
+				ResultNum = calculator.division(NumOne, NumFour);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+
+			}
+			if (calculator.SymbolType == "*")
+			{
+				ResultNum = calculator.division(NumOne, NumTwo);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+
+			}
+			if (calculator.SymbolType == "/")
+			{
+				ResultNum = calculator.division(NumOne, NumOne);
+				calculator.paint(calculator, hdc, cxChar, cyChar);
+				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+			}
+			break;
+		default:
 			break;
 		}
 		
