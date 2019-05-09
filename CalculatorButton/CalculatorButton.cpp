@@ -20,12 +20,12 @@ button[] =
 	BS_PUSHBUTTON,        TEXT("4"),
 	BS_PUSHBUTTON,		  TEXT("1"),
 	BS_PUSHBUTTON,        TEXT("+/_"),
-	BS_PUSHBUTTON,        TEXT("<-"),
+	BS_PUSHBUTTON,        TEXT("C"),
 	BS_PUSHBUTTON,        TEXT("8"),
 	BS_PUSHBUTTON,        TEXT("5"),
 	BS_PUSHBUTTON,		  TEXT("2"),
 	BS_PUSHBUTTON,        TEXT("0"),
-	BS_PUSHBUTTON,        TEXT("%"),
+	BS_PUSHBUTTON,        TEXT("<-"),
 	BS_PUSHBUTTON,        TEXT("9"),
 	BS_PUSHBUTTON,        TEXT("6"),
 	BS_PUSHBUTTON,        TEXT("3"),
@@ -223,6 +223,9 @@ void test()
 	//double value = c.GetResult();
 }
 
+
+benson::Calculator c;
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
 {
 	test();
@@ -248,6 +251,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 	hwnd = CreateWindow(szAppName, TEXT("计算器"), WS_OVERLAPPEDWINDOW, 200, 200, 400, 400, NULL, NULL, hInstance, NULL);
 	ShowWindow(hwnd, iCmdShow);
 	UpdateWindow(hwnd);
+
+	c.clear();
+
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		TranslateMessage(&msg);
@@ -257,6 +263,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 }
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+
 	static HWND   hwndButton[NUM];
 	static HWND	  hwndTEXT;
 	static RECT  rect;
@@ -297,15 +304,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case  WM_PAINT:
+	{
 		InvalidateRect(hwnd, &rect, TRUE);
 		hdc = BeginPaint(hwnd, &ps);
 		SelectObject(hdc, GetStockObject(SYSTEM_FIXED_FONT));
 		//SetBkMode(hdc, TRANSPARENT);
-		
-		
-		static TCHAR buffer[100];
+
+		wstring s = c.GetExpressionString();
+		TextOut(hdc, 5, 5, s.c_str(), s.size());
+
+		wstring s2 = c.buffer.GetStrValue();
+		TextOut(hdc, 5, 40, s2.c_str(), s2.size());
+
 		calculator.paint(hdc, cxChar, cyChar);
 		EndPaint(hwnd, &ps);
+	}
 		return 0;
 	                
 	case  WM_DRAWITEM:
@@ -320,270 +333,410 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		
 		case 0:
-			Clear = clearAll;
-		case 1:
-			
-			calculator.isNumber(true, 7, calculator);
-			//DrawText()
-			//TextOut(hdc, 10 * cxChar, 2 * cyChar, calculator.TempBuffer, lstrlen(calculator.TempBuffer));
-			calculator = calculator.getNumber(calculator, false);
-			
-			calculator.paint(calculator, hdc, cxChar, cyChar);
+			//Clear = clearAll;
 
-			//ReleaseDC(hwnd, hdc);
+			c.buffer.clear();
+
+			break;
+		case 1:
+			//
+			//calculator.isNumber(true, 7, calculator);
+			////DrawText()
+			////TextOut(hdc, 10 * cxChar, 2 * cyChar, calculator.TempBuffer, lstrlen(calculator.TempBuffer));
+			//calculator = calculator.getNumber(calculator, false);
+			//
+			////calculator.paint(calculator, hdc, cxChar, cyChar);
+
+			////ReleaseDC(hwnd, hdc);
+
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+
+			c.buffer.AppendNumber(7);
+
 			break;
 			
 		case 2:
-			calculator.isNumber(true, 4, calculator);
+			/*calculator.isNumber(true, 4, calculator);
 			calculator = calculator.getNumber(calculator, false);
 			calculator.paint(calculator, hdc, cxChar, cyChar);
+			*/
+
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+			c.buffer.AppendNumber(4);
+
 			break;
 		case 3:
-			calculator.isNumber(true, 1, calculator);
+			/*calculator.isNumber(true, 1, calculator);
 			calculator = calculator.getNumber(calculator, false);
 			calculator.paint(calculator, hdc, cxChar, cyChar);
+			
+			*/
+
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+			c.buffer.AppendNumber(1);
+
 			break;
 		case 4:
-			if (flag % 2 == 0)//所有值取正数
-			{
-				calculator.atSymbol(true, "+", calculator);
-				calculator = calculator.getNumber(calculator,true);
-				
-			}
-			else//所有值取负数
-			{
-				calculator.atSymbol(true, "-", calculator);
-				calculator = calculator.getNumber(calculator,true);
-				calculator.Number = -calculator.Number;
+			//if (flag % 2 == 0)//所有值取正数
+			//{
+			//	calculator.atSymbol(true, "+", calculator);
+			//	calculator = calculator.getNumber(calculator,true);
+			//	
+			//}
+			//else//所有值取负数
+			//{
+			//	calculator.atSymbol(true, "-", calculator);
+			//	calculator = calculator.getNumber(calculator,true);
+			//	calculator.Number = -calculator.Number;
 
-			}	
-			flag  += 1;
-			if (flag > 2)
-				flag = 0;
+			//}	
+			//flag  += 1;
+			//if (flag > 2)
+			//	flag = 0;
+
+
+
+			if (!c.IsCurrentOp())
+			{
+				c.buffer.switchPosNag();
+			}
+
 			break;
 		case 5:
-			Clear = clearOne;
+			//Clear = clearOne;
+			c.clear();
+			break;
 		case 6:
-
+/*
 			calculator.isNumber(true, 8, calculator);
 			calculator = calculator.getNumber(calculator, false);
 			calculator.paint(calculator, hdc, cxChar, cyChar);
+			*/
+
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+			c.buffer.AppendNumber(8);
+
 			break;
 
 		case 7:
-			calculator.isNumber(true, 5, calculator);
+			/*calculator.isNumber(true, 5, calculator);
 			calculator = calculator.getNumber(calculator, false);
 			calculator.paint(calculator, hdc, cxChar, cyChar);
+			*/
+
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+			c.buffer.AppendNumber(5);
+
 			break;
 		case 8:
-			calculator.isNumber(true, 2, calculator);
+			/*calculator.isNumber(true, 2, calculator);
 			calculator = calculator.getNumber(calculator, false);
 			calculator.paint(calculator, hdc, cxChar, cyChar);
-			
+*/
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+			c.buffer.AppendNumber(2);
+
 			break;
 		case 9:
-			calculator.isNumber(true, 0, calculator);
+			/*calculator.isNumber(true, 0, calculator);
 			calculator = calculator.getNumber(calculator, false);
 			calculator.paint(calculator, hdc, cxChar, cyChar);
+			*/
+
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+			c.buffer.AppendNumber(0);
+
+			
 			break;
 
 		case 10:
-			calculator.atSymbol(true, "%", calculator);
-			
+			//calculator.atSymbol(true, "", calculator);
+			c.buffer.popBack();
+
 			break;
 		case 11:
-			calculator.isNumber(true, 9, calculator);
-			calculator = calculator.getNumber(calculator, false);
-			calculator.paint(calculator, hdc, cxChar, cyChar);
+			//calculator.isNumber(true, 9, calculator);
+			//calculator = calculator.getNumber(calculator, false);
+			//calculator.paint(calculator, hdc, cxChar, cyChar);
+
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+			c.buffer.AppendNumber(9);
 
 			break;
 		case 12:
-			calculator.isNumber(true, 6, calculator);
-			calculator = calculator.getNumber(calculator, false);
-			calculator.paint(calculator, hdc, cxChar, cyChar);
+			//calculator.isNumber(true, 6, calculator);
+			//calculator = calculator.getNumber(calculator, false);
+			//calculator.paint(calculator, hdc, cxChar, cyChar);
+
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+			c.buffer.AppendNumber(6);
+
+
 			break;
 
 		case 13:
-			calculator.isNumber(true, 3, calculator);
+			/*calculator.isNumber(true, 3, calculator);
 			calculator = calculator.getNumber(calculator, false);
 			calculator.paint(calculator, hdc, cxChar, cyChar);
+			*/
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+			c.buffer.AppendNumber(3);
+
 			break;
 		case 14:
-			calculator.atSymbol(true, ".", calculator);
+
+			//calculator.atSymbol(true, ".", calculator);
+			if (c.IsCurrentOp())
+			{
+				c.SetCurrentOpStatus(false);
+				c.buffer.clear();
+			}
+			c.buffer.AppendPoint();
+
+			
 			break;
 		case 15:
 			
-			calculator.atSymbol(true, "/", calculator);
-			calculator = calculator.getNumber(calculator, true);
-			NumOne = calculator.Number;
-			calculator.SymbolType = "/";
-			Operator = division;
+			//calculator.atSymbol(true, "/", calculator);
+			//calculator = calculator.getNumber(calculator, true);
+			//NumOne = calculator.Number;
+			//calculator.SymbolType = "/";
+			//Operator = division;
 			
+			if (!c.IsCurrentOp())
+			{
+				double value = c.buffer.getValue();
+				c.AddNumber(value);
+			}
+
+			c.AddOperator(benson::division);
+
 			break;
 		case 16:
-			calculator.atSymbol(true, "*", calculator);
-			calculator = calculator.getNumber(calculator, true);
-			NumTwo = calculator.Number;
-			calculator.SymbolType = "*";
-			Operator = multipli;
+			//calculator.atSymbol(true, "*", calculator);
+			//calculator = calculator.getNumber(calculator, true);
+			//NumTwo = calculator.Number;
+			//calculator.SymbolType = "*";
+			//Operator = multipli;
+
+			if (!c.IsCurrentOp())
+			{
+				double value = c.buffer.getValue();
+				c.AddNumber(value);
+			}
+
+			c.AddOperator(benson::multipli);
+
 			break;
 		case 17:
-			calculator.atSymbol(true, "-", calculator);
-			calculator = calculator.getNumber(calculator, true);
-			NumThree = calculator.Number;
-			calculator.SymbolType = "-";
-			Operator = subtraction;
-			
+			//calculator.atSymbol(true, "-", calculator);
+			//calculator = calculator.getNumber(calculator, true);
+			//NumThree = calculator.Number;
+			//calculator.SymbolType = "-";
+			//Operator = subtraction;
+			//
+
+			if (!c.IsCurrentOp())
+			{
+				double value = c.buffer.getValue();
+				c.AddNumber(value);
+			}
+
+			c.AddOperator(benson::subtraction);
+
 			break;
 		case 18:
-			calculator.atSymbol(true, "+", calculator);
-			calculator = calculator.getNumber(calculator, true);
-			NumFour = calculator.Number;
-			calculator.SymbolType = "+";
-			Operator = add;
-			
+			//calculator.atSymbol(true, "+", calculator);
+			//calculator = calculator.getNumber(calculator, true);
+			//NumFour = calculator.Number;
+			//calculator.SymbolType = "+";
+			//Operator = add;
+
+			if (!c.IsCurrentOp())
+			{
+				double value = c.buffer.getValue();
+				c.AddNumber(value);
+			}
+
+			c.AddOperator(benson::add);
+
 
 			break;
 		case 19:
-			calculator.atSymbol(true, "=", calculator);
-			calculator.paint(ResultNum, hdc, cxChar, cyChar);
-			calculator.paint(calculator, ResultNum, hdc, cxChar, cyChar);
-			//calculator.TempBufferclear(calculator);
+			//calculator.atSymbol(true, "=", calculator);
+			//calculator.paint(ResultNum, hdc, cxChar, cyChar);
+			//calculator.paint(calculator, ResultNum, hdc, cxChar, cyChar);
+			////calculator.TempBufferclear(calculator);
+
+			double value = c.GetResult();
+			c.SaveLastResult(c.doubleToPerfectString(value));
+			c.clear();
+
 			break;
 		}
-		switch (Clear)
-		{
-		case clearOne:
-			
-			break;
-		case clearAll:
 
-			break;
-		default:
-			break;
-		}
-		switch (Operator)
-		{
-		case add:
-			if (calculator.SymbolType == "-")
-			{
-				ResultNum = calculator.add(NumFour, NumThree);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-			}
-			if (calculator.SymbolType == "+")
-			{
-				ResultNum = calculator.add(NumFour, NumFour);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		InvalidateRect(hwnd, NULL, TRUE);
 
-			}
-			if (calculator.SymbolType == "*")
-			{
-				ResultNum = calculator.add(NumFour, NumTwo);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-
-			}
-			if (calculator.SymbolType == "/")
-			{
-				ResultNum = calculator.add(NumFour, NumOne);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-
-			}
-
-			break;
-		case subtraction:
-			if (calculator.SymbolType == "-")
-			{
-				ResultNum = calculator.subtraction(NumThree, NumThree);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-			}
-			if (calculator.SymbolType == "+")
-			{
-				ResultNum = calculator.subtraction(NumThree, NumFour);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-
-			}
-			if (calculator.SymbolType == "*")
-			{
-				ResultNum = calculator.subtraction(NumThree, NumTwo);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-
-			}
-			if (calculator.SymbolType == "/")
-			{
-				ResultNum = calculator.subtraction(NumThree, NumOne);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-
-			}
-
-			break;
-		case multipli:
-			if (calculator.SymbolType == "-")
-			{
-				ResultNum = calculator.multipli(NumTwo, NumThree);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-			}
-			if (calculator.SymbolType == "+")
-			{
-				ResultNum = calculator.multipli(NumTwo, NumFour);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-
-			}
-			if (calculator.SymbolType == "*")
-			{
-				ResultNum = calculator.multipli(NumTwo, NumTwo);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-
-			}
-			if (calculator.SymbolType == "/")
-			{
-				ResultNum = calculator.multipli(NumTwo, NumOne);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-			}
-			break;
-		case division:
-			if (calculator.SymbolType == "-")
-			{
-				ResultNum = calculator.division(NumOne, NumThree);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-			}
-			if (calculator.SymbolType == "+")
-			{
-				ResultNum = calculator.division(NumOne, NumFour);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-
-			}
-			if (calculator.SymbolType == "*")
-			{
-				ResultNum = calculator.division(NumOne, NumTwo);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-
-			}
-			if (calculator.SymbolType == "/")
-			{
-				ResultNum = calculator.division(NumOne, NumOne);
-				calculator.paint(calculator, hdc, cxChar, cyChar);
-				calculator.paint(ResultNum, hdc, cxChar, cyChar);
-			}
-			break;
-		default:
-			break;
-		}
-		
+		//switch (Clear)
+		//{
+		//case clearOne:
+		//	
+		//	break;
+		//case clearAll:
+		//	break;
+		//default:
+		//	break;
+		//}
+		//switch (Operator)
+		//{
+		//case add:
+		//	if (calculator.SymbolType == "-")
+		//	{
+		//		ResultNum = calculator.add(NumFour, NumThree);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "+")
+		//	{
+		//		ResultNum = calculator.add(NumFour, NumFour);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "*")
+		//	{
+		//		ResultNum = calculator.add(NumFour, NumTwo);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "/")
+		//	{
+		//		ResultNum = calculator.add(NumFour, NumOne);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	break;
+		//case subtraction:
+		//	if (calculator.SymbolType == "-")
+		//	{
+		//		ResultNum = calculator.subtraction(NumThree, NumThree);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "+")
+		//	{
+		//		ResultNum = calculator.subtraction(NumThree, NumFour);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "*")
+		//	{
+		//		ResultNum = calculator.subtraction(NumThree, NumTwo);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "/")
+		//	{
+		//		ResultNum = calculator.subtraction(NumThree, NumOne);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	break;
+		//case multipli:
+		//	if (calculator.SymbolType == "-")
+		//	{
+		//		ResultNum = calculator.multipli(NumTwo, NumThree);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "+")
+		//	{
+		//		ResultNum = calculator.multipli(NumTwo, NumFour);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "*")
+		//	{
+		//		ResultNum = calculator.multipli(NumTwo, NumTwo);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "/")
+		//	{
+		//		ResultNum = calculator.multipli(NumTwo, NumOne);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	break;
+		//case division:
+		//	if (calculator.SymbolType == "-")
+		//	{
+		//		ResultNum = calculator.division(NumOne, NumThree);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "+")
+		//	{
+		//		ResultNum = calculator.division(NumOne, NumFour);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "*")
+		//	{
+		//		ResultNum = calculator.division(NumOne, NumTwo);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	if (calculator.SymbolType == "/")
+		//	{
+		//		ResultNum = calculator.division(NumOne, NumOne);
+		//		calculator.paint(calculator, hdc, cxChar, cyChar);
+		//		calculator.paint(ResultNum, hdc, cxChar, cyChar);
+		//	}
+		//	break;
+		//default:
+		//	break;
+		//}
+		//
 	}
 	break;
 
